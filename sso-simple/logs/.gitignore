@@ -1,0 +1,2 @@
+# Ignore all log files — ไม่ commit ไฟล์ log เข้า git
+*.log
