@@ -50,14 +50,21 @@ $_SESSION['oauth_state']      = $state;
 $_SESSION['oauth_state_time'] = time();
 
 // สร้าง Authorization URL — Build authorization URL
+// Build authorization URL. We encode parameters except `scope` so the
+// `scope` value is included verbatim (spaces not percent-encoded).
+$scope = 'cid title_th title_eng name_th name_eng mobile_number email organization ial idp_permission offline_access';
 $params = [
     'client_id'     => PROVIDER_ID_CLIENT_ID,
-    'redirect_uri'  => OAUTH_REDIRECT_URI,
     'response_type' => 'code',
-    'state'         => $state,
-    'scope'         => 'cid,name_th,name_eng,email,mobile_number',
 ];
-$auth_url = PROVIDER_ID_AUTHORIZATION_URL . '?' . http_build_query($params);
+$query = http_build_query($params, '', '&', PHP_QUERY_RFC3986);
+// Build URL in this exact order: client_id, response_type, redirect_uri (verbatim),
+// scope (spaces encoded as %20), state.
+$auth_url = PROVIDER_ID_AUTHORIZATION_URL
+    . '?' . $query
+    . '&redirect_uri=' . OAUTH_REDIRECT_URI
+    . '&scope=' . rawurlencode($scope)
+    . '&state=' . $state;
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -193,7 +200,11 @@ $auth_url = PROVIDER_ID_AUTHORIZATION_URL . '?' . http_build_query($params);
     <h1>เข้าสู่ระบบด้วย Provider ID</h1>
     <p class="subtitle">สำหรับบุคลากรสาธารณสุข</p>
 
-    <span class="provider-badge">🔐 provider.id.th</span>
+    <?php
+    $provider_host = parse_url(PROVIDER_ID_AUTHORIZATION_URL, PHP_URL_HOST) ?: 'provider.id.th';
+    $env_label = defined('PROVIDER_ENV') ? strtoupper(PROVIDER_ENV) : strtoupper(getenv('PROVIDER_ENV') ?: 'UAT');
+    ?>
+    <span class="provider-badge">🔐 <?= htmlspecialchars($provider_host) ?> (<?= htmlspecialchars($env_label) ?>)</span>
 
     <?php if ($expired): ?>
     <div class="alert alert-warning">
@@ -207,7 +218,7 @@ $auth_url = PROVIDER_ID_AUTHORIZATION_URL . '?' . http_build_query($params);
     </div>
     <?php endif; ?>
 
-    <a href="<?= htmlspecialchars($auth_url) ?>" class="btn-login">
+    <a href="<?= $auth_url ?>" class="btn-login">
         เข้าสู่ระบบสำหรับบุคลากรสาธารณสุข
     </a>
 
