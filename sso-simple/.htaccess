@@ -1,0 +1,74 @@
+# Apache configuration for sso-simple/
+# ความปลอดภัยพื้นฐาน — Basic security headers and access restrictions
+
+# ────────────────────────────────────────────────
+# ปฏิเสธการเข้าถึง conf/ และ logs/ โดยตรง
+# Deny direct HTTP access to sensitive directories
+# ────────────────────────────────────────────────
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Deny access to conf/ directory
+    RewriteRule ^conf/   - [F,L]
+
+    # Deny access to logs/ directory
+    RewriteRule ^logs/   - [F,L]
+</IfModule>
+
+# ────────────────────────────────────────────────
+# Security Headers
+# ────────────────────────────────────────────────
+<IfModule mod_headers.c>
+    # ป้องกัน clickjacking
+    Header always set X-Frame-Options "SAMEORIGIN"
+
+    # ป้องกัน MIME-type sniffing
+    Header always set X-Content-Type-Options "nosniff"
+
+    # XSS Protection (legacy browsers)
+    Header always set X-XSS-Protection "1; mode=block"
+
+    # Referrer Policy
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Content Security Policy — อนุญาตเฉพาะ resources จาก same origin
+    Header always set Content-Security-Policy "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline';"
+
+    # ลบ header ที่เปิดเผยข้อมูล server
+    Header always unset X-Powered-By
+    Header always unset Server
+</IfModule>
+
+# ────────────────────────────────────────────────
+# Disable directory listing
+# ────────────────────────────────────────────────
+Options -Indexes
+
+# ────────────────────────────────────────────────
+# ป้องกันการเข้าถึงไฟล์ที่ซ่อน (dot files)
+# Deny access to hidden dot files (except .htaccess itself)
+# ────────────────────────────────────────────────
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# ────────────────────────────────────────────────
+# ตั้งค่า PHP session ให้ปลอดภัย
+# Secure PHP session settings (if using PHP ini override)
+# ────────────────────────────────────────────────
+<IfModule mod_php.c>
+    php_value session.cookie_httponly 1
+    php_value session.cookie_samesite Lax
+    php_value session.use_strict_mode 1
+</IfModule>
+<IfModule mod_php7.c>
+    php_value session.cookie_httponly 1
+    php_value session.cookie_samesite Lax
+    php_value session.use_strict_mode 1
+</IfModule>
+<IfModule mod_php8.c>
+    php_value session.cookie_httponly 1
+    php_value session.cookie_samesite Lax
+    php_value session.use_strict_mode 1
+</IfModule>
