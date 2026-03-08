@@ -6,6 +6,15 @@
  * All requests are routed here by .htaccess (mod_rewrite).
  */
 
+// Set session cookie lifetime to 8 hours (28800 seconds)
+session_set_cookie_params([
+    'lifetime' => 28800,  // 8 hours
+    'path'     => '/',
+    'secure'   => isset($_SERVER['HTTPS']),
+    'httponly' => true,
+    'samesite' => 'Lax',
+]);
+
 session_start();
 
 // Get page parameter (sanitized)
@@ -41,4 +50,5 @@ switch ($GET_PAGE) {
         require 'pages/login.php';
         break;
 }
+print_r($_SESSION);
 ?>

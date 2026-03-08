@@ -6,7 +6,9 @@
 
 require_once __DIR__ . '/../conf/sso-config.php';
 
+// DEBUG: ยกเลิก redirect ชั่วคราวเพื่อทดสอบ session
 // ถ้า login แล้วและ session ยังไม่หมดอายุ — redirect ต่อไป
+/*
 if (
     isset($_SESSION['sso_logged_in'], $_SESSION['sso_expires_at']) &&
     $_SESSION['sso_logged_in'] === true &&
@@ -14,6 +16,18 @@ if (
 ) {
     $dest = isset($_GET['continue']) ? $_GET['continue'] : DEFAULT_REDIRECT_URL;
     header('Location: ' . $dest);
+    exit;
+}
+*/
+
+// DEBUG: แสดง session ปัจจุบัน
+if (isset($_SESSION['sso_logged_in']) && $_SESSION['sso_logged_in'] === true) {
+    echo "<h2>✅ Session Active</h2>";
+    echo "<pre>";
+    echo htmlspecialchars(json_encode($_SESSION, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    echo "</pre>";
+    echo "<hr>";
+    echo "<p><a href='?logout=1'>Logout</a></p>";
     exit;
 }
 

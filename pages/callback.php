@@ -213,10 +213,10 @@ displayProfileData($profile_unwrapped);
 
 // ──────────────────────────────────────────────────────────────
 // Step 4 — Validate profile data
-// ตรวจสอบว่ามีเลขบัตรประชาชน (cid) อยู่ในข้อมูล
+// ตรวจสอบว่ามี provider_id อยู่ในข้อมูล
 // ──────────────────────────────────────────────────────────────
-if (empty($profile_unwrapped['cid'])) {
-    debugOutput('ERROR', 'No CID in profile', $profile_unwrapped);
+if (empty($profile_unwrapped['provider_id'])) {
+    debugOutput('ERROR', 'No provider_id in profile', $profile_unwrapped);
     exit;
 }
 
@@ -228,17 +228,42 @@ if (empty($profile_unwrapped['cid'])) {
 // Regenerate session ID to prevent session fixation
 session_regenerate_id(true);
 
+// Process all organizations (user may have multiple affiliations)
+$organizations = [];
+if (isset($profile_unwrapped['organization']) && is_array($profile_unwrapped['organization'])) {
+    foreach ($profile_unwrapped['organization'] as $org) {
+        $organizations[] = [
+            'hcode'       => $org['hcode'] ?? '',
+            'hname_th'    => $org['hname_th'] ?? '',
+            'hname_eng'   => $org['hname_eng'] ?? '',
+            'position'    => $org['position'] ?? '',
+            'position_id' => $org['position_id'] ?? '',
+            'business_id' => $org['business_id'] ?? '',
+        ];
+    }
+}
+
 $_SESSION['sso_logged_in'] = true;
 $_SESSION['sso_user'] = [
-    'cid'         => $profile_unwrapped['cid'],
-    'name_th'     => isset($profile_unwrapped['name_th'])       ? $profile_unwrapped['name_th']       : '',
-    'name_eng'    => isset($profile_unwrapped['name_eng'])      ? $profile_unwrapped['name_eng']      : '',
-    'email'       => isset($profile_unwrapped['email'])         ? $profile_unwrapped['email']         : '',
-    'mobile'      => isset($profile_unwrapped['mobile_number']) ? $profile_unwrapped['mobile_number'] : '',
-    'provider_id' => isset($profile_unwrapped['id'])            ? $profile_unwrapped['id']            : '',
+    // Primary identifiers
+    'provider_id' => $profile_unwrapped['provider_id'] ?? '',
+    'account_id'  => $profile_unwrapped['account_id'] ?? '',
+    'hash_cid'    => $profile_unwrapped['hash_cid'] ?? '',
+
+    // Security level
+    'ial_level'   => $profile_unwrapped['ial_level'] ?? 0,
+
+    // Personal info
+    'name_th'     => $profile_unwrapped['name_th'] ?? '',
+    'name_eng'    => $profile_unwrapped['name_eng'] ?? '',
+    'email'       => $profile_unwrapped['email'] ?? '',
+
+    // All organizations (user may have multiple affiliations)
+    'organizations' => $organizations,
+
+    // Metadata
     'login_at'    => date('Y-m-d H:i:s'),
     'login_ip'    => $_SERVER['REMOTE_ADDR'] ?? '',
-    'access_token'=> $access_token,
 ];
 $_SESSION['sso_expires_at'] = time() + SSO_SESSION_LIFETIME;
 
