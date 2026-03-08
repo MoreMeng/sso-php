@@ -8,8 +8,8 @@ define( 'PROVIDER_ENV', getenv( 'PROVIDER_ENV' ) ?: 'uat' ); // 'uat' or 'prd'
 // Per-environment configuration. Values can be overridden with environment variables.
 $providers = [
     'uat' => [
-        'auth_url'285297      => 'https://uat-provider.id.th/v1/oauth2/authorize',
-        'token_url'     => 'https://uat-provider.id.th/oauth/token',
+        'auth_url'      => 'https://uat-provider.id.th/v1/oauth2/authorize',
+        'token_url'     => 'https://uat-provider.id.th/v1/oauth2/token',
         'user_info_url' => 'https://uat-provider.id.th/api/v1/services/profile?moph_center_token=1&moph_idp_permission=1&position_type=1',
         'client_id'     => getenv( 'PROVIDER_UAT_CLIENT_ID' ) ?: '8248c4a6-955c-424d-9ed4-f6edcb417d71',
         'client_secret' => getenv( 'PROVIDER_UAT_CLIENT_SECRET' ) ?: 'RfaLO1UdOCYJMQ5QMG6asvHbGTiyeeAk',
@@ -17,7 +17,7 @@ $providers = [
     ],
     'prd' => [
         'auth_url'            => 'https://provider.id.th/v1/oauth2/authorize',
-        'token_url'           => 'https://provider.id.th/oauth/token',
+        'token_url'           => 'https://provider.id.th/v1/oauth2/token',
         'user_info_url'       => 'https://provider.id.th/api/v1/services/profile?moph_center_token=1&moph_idp_permission=1&position_type=1',
         'client_id'           => getenv( 'PROVIDER_PRD_CLIENT_ID' ) ?: 'aa6c696a-1d76-4a4c-91b6-5f8d6802b0f5',
         'client_secret'       => getenv( 'PROVIDER_PRD_CLIENT_SECRET' ) ?: 'A68s5HYbDBCPj981BFU7asvVslkjqxhn',

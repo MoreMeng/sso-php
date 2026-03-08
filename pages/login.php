@@ -4,16 +4,7 @@
  * Login page — redirects user to Provider ID OAuth2 authorization endpoint
  */
 
-session_set_cookie_params([
-    'lifetime' => 0,
-    'path'     => '/',
-    'secure'   => isset($_SERVER['HTTPS']),
-    'httponly' => true,
-    'samesite' => 'Lax',
-]);
-session_start();
-
-require_once __DIR__ . '/conf/sso-config.php';
+require_once __DIR__ . '/../conf/sso-config.php';
 
 // ถ้า login แล้วและ session ยังไม่หมดอายุ — redirect ต่อไป
 if (
@@ -21,7 +12,11 @@ if (
     $_SESSION['sso_logged_in'] === true &&
     time() < $_SESSION['sso_expires_at']
 ) {
-    $dest = isset($_GET['continue']) ? $_GET['continue'] : DEFAULT_REDIRECT_URL;
+    $dest = 'profile';  // default destination
+    if (!empty($_SESSION['sso_continue_url'])) {
+        $dest = $_SESSION['sso_continue_url'];
+        unset($_SESSION['sso_continue_url']);
+    }
     header('Location: ' . $dest);
     exit;
 }
@@ -29,6 +24,9 @@ if (
 // เก็บ URL ที่จะ redirect หลัง login
 if (isset($_GET['continue'])) {
     $_SESSION['sso_continue_url'] = $_GET['continue'];
+} else {
+    // ถ้าไม่มี continue parameter ให้ set default ไปยัง profile page (mod_rewrite จะ handle)
+    $_SESSION['sso_continue_url'] = 'profile';
 }
 
 // รหัสข้อผิดพลาด — Error code mapping (Thai messages)
