@@ -4,16 +4,7 @@
  * Login page — redirects user to Provider ID OAuth2 authorization endpoint
  */
 
-session_set_cookie_params([
-    'lifetime' => 0,
-    'path'     => '/',
-    'secure'   => isset($_SERVER['HTTPS']),
-    'httponly' => true,
-    'samesite' => 'Lax',
-]);
-session_start();
-
-require_once __DIR__ . '/conf/sso-config.php';
+require_once __DIR__ . '/../conf/sso-config.php';
 
 // ถ้า login แล้วและ session ยังไม่หมดอายุ — redirect ต่อไป
 if (
