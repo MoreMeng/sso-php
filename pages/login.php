@@ -6,34 +6,27 @@
 
 require_once __DIR__ . '/../conf/sso-config.php';
 
-// DEBUG: ยกเลิก redirect ชั่วคราวเพื่อทดสอบ session
 // ถ้า login แล้วและ session ยังไม่หมดอายุ — redirect ต่อไป
-/*
 if (
     isset($_SESSION['sso_logged_in'], $_SESSION['sso_expires_at']) &&
     $_SESSION['sso_logged_in'] === true &&
     time() < $_SESSION['sso_expires_at']
 ) {
-    $dest = isset($_GET['continue']) ? $_GET['continue'] : DEFAULT_REDIRECT_URL;
+    $dest = 'profile';  // default destination
+    if (!empty($_SESSION['sso_continue_url'])) {
+        $dest = $_SESSION['sso_continue_url'];
+        unset($_SESSION['sso_continue_url']);
+    }
     header('Location: ' . $dest);
-    exit;
-}
-*/
-
-// DEBUG: แสดง session ปัจจุบัน
-if (isset($_SESSION['sso_logged_in']) && $_SESSION['sso_logged_in'] === true) {
-    echo "<h2>✅ Session Active</h2>";
-    echo "<pre>";
-    echo htmlspecialchars(json_encode($_SESSION, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-    echo "</pre>";
-    echo "<hr>";
-    echo "<p><a href='?logout=1'>Logout</a></p>";
     exit;
 }
 
 // เก็บ URL ที่จะ redirect หลัง login
 if (isset($_GET['continue'])) {
     $_SESSION['sso_continue_url'] = $_GET['continue'];
+} else {
+    // ถ้าไม่มี continue parameter ให้ set default ไปยัง profile page (mod_rewrite จะ handle)
+    $_SESSION['sso_continue_url'] = 'profile';
 }
 
 // รหัสข้อผิดพลาด — Error code mapping (Thai messages)

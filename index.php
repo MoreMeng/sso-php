@@ -50,5 +50,4 @@ switch ($GET_PAGE) {
         require 'pages/login.php';
         break;
 }
-print_r($_SESSION);
 ?>
