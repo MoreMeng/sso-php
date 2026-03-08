@@ -8,7 +8,7 @@ define( 'PROVIDER_ENV', getenv( 'PROVIDER_ENV' ) ?: 'uat' ); // 'uat' or 'prd'
 // Per-environment configuration. Values can be overridden with environment variables.
 $providers = [
     'uat' => [
-        'auth_url'      => 'https://uat-provider.id.th/v1/oauth2/authorize',
+        'auth_url'285297      => 'https://uat-provider.id.th/v1/oauth2/authorize',
         'token_url'     => 'https://uat-provider.id.th/oauth/token',
         'user_info_url' => 'https://uat-provider.id.th/api/v1/services/profile?moph_center_token=1&moph_idp_permission=1&position_type=1',
         'client_id'     => getenv( 'PROVIDER_UAT_CLIENT_ID' ) ?: '8248c4a6-955c-424d-9ed4-f6edcb417d71',
