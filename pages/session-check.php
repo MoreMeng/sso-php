@@ -28,7 +28,7 @@ if (session_status() === PHP_SESSION_NONE) {
 if (!isset($_SESSION['sso_logged_in']) || $_SESSION['sso_logged_in'] !== true) {
     $current_url = (isset($_SERVER['HTTPS']) ? 'https' : 'http')
         . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-    header('Location: /sso-simple/login.php?continue=' . urlencode($current_url));
+    header('Location: /athweb/sso/?page=login&continue=' . urlencode($current_url));
     exit;
 }
 
@@ -36,7 +36,7 @@ if (!isset($_SESSION['sso_logged_in']) || $_SESSION['sso_logged_in'] !== true) {
 if (time() > $_SESSION['sso_expires_at']) {
     session_unset();
     session_destroy();
-    header('Location: /sso-simple/login.php?expired=1');
+    header('Location: /athweb/sso/?page=login&expired=1');
     exit;
 }
 
