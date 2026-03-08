@@ -28,6 +28,39 @@ function debugOutput(string $status, string $message, $data = null): void
 }
 
 // ──────────────────────────────────────────────────────────────
+// Helper: display profile data in readable table format
+// ──────────────────────────────────────────────────────────────
+function displayProfileData(array $profile): void
+{
+    echo "<h3>📋 Profile Data from Provider ID API</h3>";
+    echo "<table border='1' cellpadding='10' style='border-collapse: collapse; font-family: Arial, sans-serif; margin: 20px 0;'>";
+    echo "<tr style='background-color: #4CAF50; color: white;'><th style='padding: 15px;'>Field</th><th style='padding: 15px;'>Value</th></tr>";
+
+    $rowCount = 0;
+    foreach ($profile as $key => $value) {
+        $bgcolor = ($rowCount++ % 2 == 0) ? '#f9f9f9' : '#ffffff';
+
+        if (is_array($value) || is_object($value)) {
+            $valueStr = json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        } else {
+            $valueStr = (string)$value;
+        }
+
+        $displayValue = htmlspecialchars(substr($valueStr, 0, 300));
+        if (strlen($valueStr) > 300) {
+            $displayValue .= '...';
+        }
+
+        echo "<tr style='background-color: $bgcolor;'>";
+        echo "<td style='padding: 10px; font-weight: bold; color: #333;'>" . htmlspecialchars($key) . "</td>";
+        echo "<td style='padding: 10px; color: #555;'>" . $displayValue . "</td>";
+        echo "</tr>";
+    }
+
+    echo "</table>";
+}
+
+// ──────────────────────────────────────────────────────────────
 // Helper: write access log
 // ──────────────────────────────────────────────────────────────
 function logAccess(array $user): void
@@ -133,15 +166,17 @@ if (!$access_token) {
 
 // ──────────────────────────────────────────────────────────────
 // Step 3 — Fetch user profile
-// ดึงข้อมูลผู้ใช้จาก Provider ID API โดยใช้ Bearer token
+// ดึงข้อมูลผู้ใช้จาก Provider ID API โดยใช้ Bearer token + client credentials
 // ──────────────────────────────────────────────────────────────
 $ch = curl_init(PROVIDER_ID_USER_INFO_URL);
 curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_TIMEOUT        => 15,
     CURLOPT_HTTPHEADER     => [
+        'Content-Type: application/json',
         'Authorization: Bearer ' . $access_token,
-        'Accept: application/json',
+        'client-id: ' . PROVIDER_ID_CLIENT_ID,
+        'secret-key: ' . PROVIDER_ID_CLIENT_SECRET,
     ],
 ]);
 
@@ -150,8 +185,19 @@ $profile_http     = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $profile_err      = curl_error($ch);
 curl_close($ch);
 
+debugOutput('PROFILE_REQUEST', 'Requesting to: ' . PROVIDER_ID_USER_INFO_URL, [
+    'method' => 'GET',
+    'headers' => [
+        'Content-Type: application/json',
+        'Authorization: Bearer ' . substr($access_token, 0, 50) . '...',
+        'client-id: ' . PROVIDER_ID_CLIENT_ID,
+        'secret-key: ' . PROVIDER_ID_CLIENT_SECRET,
+    ],
+    'response_code' => $profile_http,
+]);
+
 if ($profile_err || $profile_http !== 200) {
-    debugOutput('ERROR', 'Profile fetch failed', ['http_code' => $profile_http, 'error' => $profile_err, 'response' => $profile_response]);
+    debugOutput('ERROR', 'Profile fetch failed (HTTP ' . $profile_http . ')', ['http_code' => $profile_http, 'error' => $profile_err, 'response' => $profile_response]);
     exit;
 }
 
@@ -161,6 +207,9 @@ $profile = json_decode($profile_response, true);
 $profile_unwrapped = isset($profile['data']) ? $profile['data'] : $profile;
 
 debugOutput('PROFILE_RESPONSE', 'HTTP ' . $profile_http, $profile_unwrapped);
+
+// Display profile data in readable format
+displayProfileData($profile_unwrapped);
 
 // ──────────────────────────────────────────────────────────────
 // Step 4 — Validate profile data
