@@ -28,5 +28,5 @@ if (ini_get('session.use_cookies')) {
     );
 }
 
-header('Location: /sso-simple/login.php');
+header('Location: /athweb/sso/?page=login');
 exit;

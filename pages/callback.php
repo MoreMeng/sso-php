@@ -14,50 +14,25 @@
 require_once __DIR__ . '/../conf/sso-config.php';
 
 // ──────────────────────────────────────────────────────────────
-// Helper: debug output (instead of redirect)
+// Helper: safe redirect — ป้องกัน open redirect โดยอนุญาตเฉพาะ same-host หรือ relative path
 // ──────────────────────────────────────────────────────────────
-function debugOutput(string $status, string $message, $data = null): void
+function safeRedirect(string $url): void
 {
-    echo "<h2>OAuth2 Debug: " . htmlspecialchars($status) . "</h2>";
-    echo "<p><strong>Message:</strong> " . htmlspecialchars($message) . "</p>";
-    if ($data !== null) {
-        echo "<pre>";
-        echo htmlspecialchars(json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-        echo "</pre>";
+    $parsed = parse_url($url);
+    // Allow relative paths (no host component)
+    if (!isset($parsed['host'])) {
+        header('Location: ' . $url);
+        exit;
     }
-}
-
-// ──────────────────────────────────────────────────────────────
-// Helper: display profile data in readable table format
-// ──────────────────────────────────────────────────────────────
-function displayProfileData(array $profile): void
-{
-    echo "<h3>📋 Profile Data from Provider ID API</h3>";
-    echo "<table border='1' cellpadding='10' style='border-collapse: collapse; font-family: Arial, sans-serif; margin: 20px 0;'>";
-    echo "<tr style='background-color: #4CAF50; color: white;'><th style='padding: 15px;'>Field</th><th style='padding: 15px;'>Value</th></tr>";
-
-    $rowCount = 0;
-    foreach ($profile as $key => $value) {
-        $bgcolor = ($rowCount++ % 2 == 0) ? '#f9f9f9' : '#ffffff';
-
-        if (is_array($value) || is_object($value)) {
-            $valueStr = json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        } else {
-            $valueStr = (string)$value;
-        }
-
-        $displayValue = htmlspecialchars(substr($valueStr, 0, 300));
-        if (strlen($valueStr) > 300) {
-            $displayValue .= '...';
-        }
-
-        echo "<tr style='background-color: $bgcolor;'>";
-        echo "<td style='padding: 10px; font-weight: bold; color: #333;'>" . htmlspecialchars($key) . "</td>";
-        echo "<td style='padding: 10px; color: #555;'>" . $displayValue . "</td>";
-        echo "</tr>";
+    // Allow same host only
+    $requestHost = $_SERVER['HTTP_HOST'] ?? '';
+    if ($parsed['host'] === $requestHost) {
+        header('Location: ' . $url);
+        exit;
     }
-
-    echo "</table>";
+    // Fallback to profile page for untrusted URLs
+    header('Location: /athweb/sso/?page=profile');
+    exit;
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -89,7 +64,7 @@ $code  = isset($_GET['code'])  ? $_GET['code']  : null;
 $state = isset($_GET['state']) ? $_GET['state'] : null;
 
 if (!$code || !$state) {
-    debugOutput('ERROR', 'Missing code or state parameter', ['code' => $code, 'state' => $state]);
+    header('Location: /athweb/sso/?page=login&error=state');
     exit;
 }
 
@@ -100,13 +75,13 @@ $state_time   = isset($_SESSION['oauth_state_time']) ? $_SESSION['oauth_state_ti
 unset($_SESSION['oauth_state'], $_SESSION['oauth_state_time']);
 
 if (!$stored_state || !hash_equals($stored_state, $state)) {
-    debugOutput('ERROR', 'CSRF state mismatch', ['stored_state' => $stored_state, 'returned_state' => $state]);
+    header('Location: /athweb/sso/?page=login&error=csrf');
     exit;
 }
 
 // State token หมดอายุหลังจาก 10 นาที
 if (time() - $state_time > 600) {
-    debugOutput('ERROR', 'State token expired', ['expires_at' => date('Y-m-d H:i:s', $state_time + 600)]);
+    header('Location: /athweb/sso/?page=login&error=csrf');
     exit;
 }
 
@@ -140,14 +115,8 @@ $token_http     = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $token_err      = curl_error($ch);
 curl_close($ch);
 
-debugOutput('TOKEN_REQUEST', 'Requesting to: ' . PROVIDER_ID_TOKEN_URL, [
-    'method' => 'POST',
-    'body' => $token_body,
-    'response_code' => $token_http,
-]);
-
 if ($token_err || $token_http !== 200) {
-    debugOutput('ERROR', 'Token exchange failed (HTTP ' . $token_http . ')', ['http_code' => $token_http, 'error' => $token_err, 'response' => $token_response]);
+    header('Location: /athweb/sso/?page=login&error=token');
     exit;
 }
 
@@ -157,10 +126,8 @@ $token_data   = json_decode($token_response, true);
 $token_data_unwrapped = isset($token_data['data']) ? $token_data['data'] : $token_data;
 $access_token = isset($token_data_unwrapped['access_token']) ? $token_data_unwrapped['access_token'] : null;
 
-debugOutput('TOKEN_RESPONSE', 'HTTP ' . $token_http, $token_data_unwrapped);
-
 if (!$access_token) {
-    debugOutput('ERROR', 'No access_token in response', $token_data);
+    header('Location: /athweb/sso/?page=login&error=token');
     exit;
 }
 
@@ -185,19 +152,8 @@ $profile_http     = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $profile_err      = curl_error($ch);
 curl_close($ch);
 
-debugOutput('PROFILE_REQUEST', 'Requesting to: ' . PROVIDER_ID_USER_INFO_URL, [
-    'method' => 'GET',
-    'headers' => [
-        'Content-Type: application/json',
-        'Authorization: Bearer ' . substr($access_token, 0, 50) . '...',
-        'client-id: ' . PROVIDER_ID_CLIENT_ID,
-        'secret-key: ' . PROVIDER_ID_CLIENT_SECRET,
-    ],
-    'response_code' => $profile_http,
-]);
-
 if ($profile_err || $profile_http !== 200) {
-    debugOutput('ERROR', 'Profile fetch failed (HTTP ' . $profile_http . ')', ['http_code' => $profile_http, 'error' => $profile_err, 'response' => $profile_response]);
+    header('Location: /athweb/sso/?page=login&error=profile');
     exit;
 }
 
@@ -206,17 +162,12 @@ $profile = json_decode($profile_response, true);
 // Support both: { "data": { ... } } and { ... } structures
 $profile_unwrapped = isset($profile['data']) ? $profile['data'] : $profile;
 
-debugOutput('PROFILE_RESPONSE', 'HTTP ' . $profile_http, $profile_unwrapped);
-
-// Display profile data in readable format
-displayProfileData($profile_unwrapped);
-
 // ──────────────────────────────────────────────────────────────
 // Step 4 — Validate profile data
 // ตรวจสอบว่ามี provider_id อยู่ในข้อมูล
 // ──────────────────────────────────────────────────────────────
 if (empty($profile_unwrapped['provider_id'])) {
-    debugOutput('ERROR', 'No provider_id in profile', $profile_unwrapped);
+    header('Location: /athweb/sso/?page=login&error=no_cid');
     exit;
 }
 
@@ -268,27 +219,24 @@ $_SESSION['sso_user'] = [
 $_SESSION['sso_expires_at'] = time() + SSO_SESSION_LIFETIME;
 
 // ──────────────────────────────────────────────────────────────
-// DEBUG: Show session data (instead of redirecting)
-// ──────────────────────────────────────────────────────────────
-debugOutput('SUCCESS', 'Session created successfully', $_SESSION);
-echo "<p><strong>Session ID:</strong> " . htmlspecialchars(session_id()) . "</p>";
-
-// Uncomment below to actually redirect (when ready)
-/*
-// ──────────────────────────────────────────────────────────────
-// Step 6 — Log access (optional)
+// Step 6 — Log access
 // ──────────────────────────────────────────────────────────────
 logAccess($_SESSION['sso_user']);
 
 // ──────────────────────────────────────────────────────────────
 // Step 7 — Redirect to destination
+// ถ้ามี sso_continue_url → redirect กลับไปยัง URL ต้นทาง
+// ถ้า continue = 'profile' หรือไม่มี → redirect ไปยังหน้า profile
 // ──────────────────────────────────────────────────────────────
-$redirect = DEFAULT_REDIRECT_URL;
+$continue = '';
 if (!empty($_SESSION['sso_continue_url'])) {
-    $redirect = $_SESSION['sso_continue_url'];
+    $continue = $_SESSION['sso_continue_url'];
     unset($_SESSION['sso_continue_url']);
 }
 
-header('Location: ' . $redirect);
-exit;
-*/
+if ($continue === '' || $continue === 'profile') {
+    header('Location: /athweb/sso/?page=profile');
+    exit;
+}
+
+safeRedirect($continue);
