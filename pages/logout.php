@@ -3,6 +3,8 @@
  * logout.php — ออกจากระบบ / Destroy SSO session and redirect to login
  */
 
+require_once __DIR__ . '/../conf/sso-config.php';
+
 session_set_cookie_params([
     'lifetime' => 0,
     'path'     => '/',
@@ -28,5 +30,5 @@ if (ini_get('session.use_cookies')) {
     );
 }
 
-header('Location: /athweb/sso/?page=login');
+header('Location: ' . BASE_PATH . '/?page=login');
 exit;

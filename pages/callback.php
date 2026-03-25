@@ -31,7 +31,7 @@ function safeRedirect(string $url): void
         exit;
     }
     // Fallback to profile page for untrusted URLs
-    header('Location: /athweb/sso/?page=profile');
+    header('Location: ' . BASE_PATH . '/?page=profile');
     exit;
 }
 
@@ -64,7 +64,7 @@ $code  = isset($_GET['code'])  ? $_GET['code']  : null;
 $state = isset($_GET['state']) ? $_GET['state'] : null;
 
 if (!$code || !$state) {
-    header('Location: /athweb/sso/?page=login&error=state');
+    header('Location: ' . BASE_PATH . '/?page=login&error=state');
     exit;
 }
 
@@ -75,13 +75,13 @@ $state_time   = isset($_SESSION['oauth_state_time']) ? $_SESSION['oauth_state_ti
 unset($_SESSION['oauth_state'], $_SESSION['oauth_state_time']);
 
 if (!$stored_state || !hash_equals($stored_state, $state)) {
-    header('Location: /athweb/sso/?page=login&error=csrf');
+    header('Location: ' . BASE_PATH . '/?page=login&error=csrf');
     exit;
 }
 
 // State token หมดอายุหลังจาก 10 นาที
 if (time() - $state_time > 600) {
-    header('Location: /athweb/sso/?page=login&error=csrf');
+    header('Location: ' . BASE_PATH . '/?page=login&error=csrf');
     exit;
 }
 
@@ -116,7 +116,7 @@ $token_err      = curl_error($ch);
 curl_close($ch);
 
 if ($token_err || $token_http !== 200) {
-    header('Location: /athweb/sso/?page=login&error=token');
+    header('Location: ' . BASE_PATH . '/?page=login&error=token');
     exit;
 }
 
@@ -127,7 +127,7 @@ $token_data_unwrapped = isset($token_data['data']) ? $token_data['data'] : $toke
 $access_token = isset($token_data_unwrapped['access_token']) ? $token_data_unwrapped['access_token'] : null;
 
 if (!$access_token) {
-    header('Location: /athweb/sso/?page=login&error=token');
+    header('Location: ' . BASE_PATH . '/?page=login&error=token');
     exit;
 }
 
@@ -153,7 +153,7 @@ $profile_err      = curl_error($ch);
 curl_close($ch);
 
 if ($profile_err || $profile_http !== 200) {
-    header('Location: /athweb/sso/?page=login&error=profile');
+    header('Location: ' . BASE_PATH . '/?page=login&error=profile');
     exit;
 }
 
@@ -167,7 +167,7 @@ $profile_unwrapped = isset($profile['data']) ? $profile['data'] : $profile;
 // ตรวจสอบว่ามี provider_id อยู่ในข้อมูล
 // ──────────────────────────────────────────────────────────────
 if (empty($profile_unwrapped['provider_id'])) {
-    header('Location: /athweb/sso/?page=login&error=no_cid');
+    header('Location: ' . BASE_PATH . '/?page=login&error=no_cid');
     exit;
 }
 
@@ -235,7 +235,7 @@ if (!empty($_SESSION['sso_continue_url'])) {
 }
 
 if ($continue === '' || $continue === 'profile') {
-    header('Location: /athweb/sso/?page=profile');
+    header('Location: ' . BASE_PATH . '/?page=profile');
     exit;
 }
 
