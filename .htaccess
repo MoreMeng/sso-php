@@ -7,7 +7,7 @@
 # ────────────────────────────────────────────────
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /athweb/sso/
+    # RewriteBase /athweb/sso/
 
     # Deny access to conf/ directory
     RewriteRule ^conf/ - [F,L]

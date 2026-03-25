@@ -5,6 +5,12 @@
 
 define( 'PROVIDER_ENV', getenv( 'PROVIDER_ENV' ) ?: 'uat' ); // 'uat' or 'prd'
 
+// Determine BASE_PATH based on environment
+// Development (uat): /athweb/sso/
+// Production (prd): /sso/
+$base_path = ( PROVIDER_ENV === 'prd' ) ? '/sso' : '/athweb/sso';
+define( 'BASE_PATH', $base_path );
+
 // Per-environment configuration. Values can be overridden with environment variables.
 $providers = [
     'uat' => [
@@ -47,7 +53,7 @@ define( 'OAUTH_REDIRECT_URI', $cfg['redirect_uri'] );
 define( 'PROVIDER_PRD_REDIRECT_ALTERNATES', isset( $providers['prd']['redirect_alternates'] ) ? $providers['prd']['redirect_alternates'] : [] );
 
 // After successful login, if no ?continue= is provided, redirect here
-define( 'DEFAULT_REDIRECT_URL', '/athweb/sso/?page=profile' );
+define( 'DEFAULT_REDIRECT_URL', BASE_PATH . '/?page=profile' );
 
 // Session lifetime (seconds) — 8 hours
 define( 'SSO_SESSION_LIFETIME', 60 * 60 * 8 );
