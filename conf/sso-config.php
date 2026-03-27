@@ -3,12 +3,12 @@
 // Usage: set PROVIDER_ENV to 'uat' or 'prd' (via env var) to select environment.
 // Defaults to 'uat' to avoid accidental production calls.
 
-define( 'PROVIDER_ENV', getenv( 'PROVIDER_ENV' ) ?: 'uat' ); // 'uat' or 'prd'
+define( 'PROVIDER_ENV', getenv( 'PROVIDER_ENV' ) ?: 'prd' ); // 'uat' or 'prd'
 
 // Determine BASE_PATH based on environment
-// Development (uat): /athweb/sso/
-// Production (prd): /sso/
-$base_path = ( PROVIDER_ENV === 'prd' ) ? '/sso' : '/athweb/sso';
+// Development (uat): /athweb/healthid-sso/
+// Production (prd): /healthid-sso/
+$base_path = ( PROVIDER_ENV === 'prd' ) ? '/healthid-sso' : '/athweb/healthid-sso';
 define( 'BASE_PATH', $base_path );
 
 // Per-environment configuration. Values can be overridden with environment variables.
@@ -19,7 +19,7 @@ $providers = [
         'user_info_url' => 'https://uat-moph.id.th/go-api/v1/profile',
         'client_id'     => getenv( 'HEALTHID_UAT_CLIENT_ID' ) ?: '01973f8e-3de2-7b2c-aba8-a7d7e7cca28b',
         'client_secret' => getenv( 'HEALTHID_UAT_CLIENT_SECRET' ) ?: 'b45752d46d5c76a4519e145c4662bd66792708c7',
-        'redirect_uri'  => getenv( 'HEALTHID_UAT_REDIRECT_URI' ) ?: 'http://localhost/athweb/sso/callback'
+        'redirect_uri'  => getenv( 'HEALTHID_UAT_REDIRECT_URI' ) ?: 'http://localhost/athweb/healthid-sso/callback'
     ],
     'prd' => [
         'auth_url'            => 'https://moph.id.th/oauth/redirect',
@@ -28,9 +28,9 @@ $providers = [
         'client_id'           => getenv( 'HEALTHID_PRD_CLIENT_ID' ) ?: '01973f8e-6a28-7617-b426-6ff615d81497',
         'client_secret'       => getenv( 'HEALTHID_PRD_CLIENT_SECRET' ) ?: 'ef819c324e00c29178721646f6c4dd36ebfe1960',
         // Primary redirect for PRD; additional valid redirect URIs can be listed below.
-        'redirect_uri'        => getenv( 'HEALTHID_PRD_REDIRECT_URI' ) ?: 'https://ath7.link/sso/callback',
+        'redirect_uri'        => getenv( 'HEALTHID_PRD_REDIRECT_URI' ) ?: 'https://ath7.link/healthid-sso/callback',
         'redirect_alternates' => [
-            'http://athweb.athospit.net/sso/callback'
+            'http://athweb.athospit.net/healthid-sso/callback'
         ]
     ]
 ];
@@ -66,7 +66,7 @@ Guide / Notes:
   - HEALTHID_UAT_CLIENT_ID, HEALTHID_UAT_CLIENT_SECRET, HEALTHID_UAT_REDIRECT_URI
   - HEALTHID_PRD_CLIENT_ID, HEALTHID_PRD_CLIENT_SECRET, HEALTHID_PRD_REDIRECT_URI
 - Default redirect URIs:
-  - UAT: http://localhost/athweb/sso/callback
-  - PRD: https://ath7.link/sso/callback  (alternate: http://athweb.athospit.net/sso/callback)
+  - UAT: http://localhost/athweb/healthid-sso/callback
+  - PRD: https://ath7.link/healthid-sso/callback  (alternate: http://athweb.athospit.net/healthid-sso/callback)
 - Service: ATH intranet — โรงพยาบาลอ่างทอง [10689]
  */

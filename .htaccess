@@ -19,8 +19,12 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
 
+    # LOCALHOST
     # Route all requests to index.php with page parameter
     RewriteRule ^(.+?)(?:\.php)?/?$ index.php?page=$1 [QSA,L]
+
+    # ATHWEB
+    # RewriteRule ^(.+?)(?:\.php)?/?$ index.php?page=$1 [L,QSA,UnsafeAllow3F]
 </IfModule>
 
 # ────────────────────────────────────────────────
