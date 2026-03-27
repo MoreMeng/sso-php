@@ -177,6 +177,15 @@ if (empty($profile_unwrapped['account_id'])) {
 // Regenerate session ID to prevent session fixation
 session_regenerate_id(true);
 
+// ── DEBUG: เก็บ raw response ทั้งหมดไว้ใน session (ลบออกเมื่อไม่ใช้แล้ว) ──
+$_SESSION['debug_token_raw']      = $token_response;
+$_SESSION['debug_token_decoded']  = $token_data;
+$_SESSION['debug_token_unwrapped']= $token_data_unwrapped;
+$_SESSION['debug_profile_raw']    = $profile_response;
+$_SESSION['debug_profile_decoded']= $profile;
+$_SESSION['debug_profile_unwrapped'] = $profile_unwrapped;
+// ── END DEBUG ──
+
 // สร้างชื่อเต็มจากชื่อ-นามสกุล
 $title_th   = $profile_unwrapped['account_title_th']  ?? '';
 $title_eng  = $profile_unwrapped['account_title_eng'] ?? '';

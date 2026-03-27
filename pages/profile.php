@@ -21,9 +21,10 @@ require_once __DIR__ . '/session-check.php';
             background: #f0f4f8;
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 1rem;
+            justify-content: flex-start;
+            padding: 2rem 1rem;
         }
 
         .card {
@@ -159,5 +160,38 @@ require_once __DIR__ . '/session-check.php';
 
     <a href="?page=logout" class="btn-logout">ออกจากระบบ</a>
 </div>
+
+<?php if (isset($_SESSION['debug_profile_raw'])): ?>
+<div style="margin:2rem auto;width:80%;font-family:monospace;font-size:0.85rem;">
+    <h2 style="background:#1a237e;color:#fff;padding:0.6rem 1rem;border-radius:8px 8px 0 0;margin:0;">
+        🐛 DEBUG SESSION
+    </h2>
+
+    <details open style="background:#fff;border:1px solid #c5cae9;border-top:none;padding:1rem;">
+        <summary style="font-weight:700;cursor:pointer;color:#1a237e;">Token Response (raw)</summary>
+        <pre style="background:#f5f5f5;padding:0.75rem;overflow:auto;margin-top:0.5rem;"><?= htmlspecialchars($token_response ?? $_SESSION['debug_token_raw'] ?? '') ?></pre>
+    </details>
+
+    <details style="background:#fff;border:1px solid #c5cae9;border-top:none;padding:1rem;">
+        <summary style="font-weight:700;cursor:pointer;color:#1a237e;">Token Decoded (array)</summary>
+        <pre style="background:#f5f5f5;padding:0.75rem;overflow:auto;margin-top:0.5rem;"><?= htmlspecialchars(print_r($_SESSION['debug_token_decoded'] ?? [], true)) ?></pre>
+    </details>
+
+    <details open style="background:#fff;border:1px solid #c5cae9;border-top:none;padding:1rem;">
+        <summary style="font-weight:700;cursor:pointer;color:#1a237e;">Profile Response (raw)</summary>
+        <pre style="background:#f5f5f5;padding:0.75rem;overflow:auto;margin-top:0.5rem;"><?= htmlspecialchars($_SESSION['debug_profile_raw'] ?? '') ?></pre>
+    </details>
+
+    <details open style="background:#fff;border:1px solid #c5cae9;border-top:none;padding:1rem;">
+        <summary style="font-weight:700;cursor:pointer;color:#1a237e;">Profile Unwrapped (array)</summary>
+        <pre style="background:#f5f5f5;padding:0.75rem;overflow:auto;margin-top:0.5rem;"><?= htmlspecialchars(print_r($_SESSION['debug_profile_unwrapped'] ?? [], true)) ?></pre>
+    </details>
+
+    <details style="background:#fff;border:1px solid #c5cae9;border-top:none;border-radius:0 0 8px 8px;padding:1rem;">
+        <summary style="font-weight:700;cursor:pointer;color:#1a237e;">Full $_SESSION</summary>
+        <pre style="background:#f5f5f5;padding:0.75rem;overflow:auto;margin-top:0.5rem;"><?= htmlspecialchars(print_r($_SESSION, true)) ?></pre>
+    </details>
+</div>
+<?php endif; ?>
 </body>
 </html>
