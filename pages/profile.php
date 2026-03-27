@@ -1,7 +1,7 @@
 <?php
 /**
  * profile.php — หน้าแสดงข้อมูลผู้ใช้ (สำหรับทดสอบ)
- * Profile page — displays logged-in user information for testing purposes
+ * Profile page — displays logged-in Health ID user information for testing purposes
  */
 
 require_once __DIR__ . '/session-check.php';
@@ -111,15 +111,11 @@ require_once __DIR__ . '/session-check.php';
 
     <table>
         <tr>
-            <th>Provider ID</th>
-            <td><?= htmlspecialchars($sso_user['provider_id'] ?? '-') ?></td>
-        </tr>
-        <tr>
             <th>Account ID</th>
             <td><code><?= htmlspecialchars(substr($sso_user['account_id'] ?? '-', 0, 20)) ?>...</code></td>
         </tr>
         <tr>
-            <th>ชื่อ (ไทย)</th>
+            <th>ชื่อ-สกุล (ไทย)</th>
             <td><?= htmlspecialchars($sso_user['name_th'] ?? '-') ?></td>
         </tr>
         <tr>
@@ -127,15 +123,23 @@ require_once __DIR__ . '/session-check.php';
             <td><?= htmlspecialchars($sso_user['name_eng'] ?? '-') ?></td>
         </tr>
         <tr>
-            <th>อีเมล</th>
-            <td><?= htmlspecialchars($sso_user['email'] ?? '-') ?></td>
+            <th>เพศ</th>
+            <td><?= htmlspecialchars($sso_user['gender_th'] ?? '-') ?></td>
         </tr>
         <tr>
-            <th>ระดับความน่าเชื่อถือ</th>
+            <th>วันเดือนปีเกิด</th>
+            <td><?= htmlspecialchars($sso_user['birth_date'] ?? '-') ?></td>
+        </tr>
+        <tr>
+            <th>เบอร์โทรศัพท์</th>
+            <td><?= htmlspecialchars($sso_user['mobile_number'] ?? '-') ?></td>
+        </tr>
+        <tr>
+            <th>ระดับความน่าเชื่อถือ (IAL)</th>
             <td><?= htmlspecialchars($sso_user['ial_level'] ?? '-') ?></td>
         </tr>
         <tr>
-            <th>Hash CID</th>
+            <th>Hash เลขบัตรประชาชน</th>
             <td><code><?= htmlspecialchars(substr($sso_user['hash_cid'] ?? '-', 0, 32)) ?>...</code></td>
         </tr>
         <tr>
@@ -147,47 +151,6 @@ require_once __DIR__ . '/session-check.php';
             <td><?= htmlspecialchars($sso_user['login_ip'] ?? '-') ?></td>
         </tr>
     </table>
-
-    <h2 style="font-size: 1.1rem; color: #1a237e; margin-top: 2rem; margin-bottom: 1rem;">📋 สังกัดหน่วยงาน</h2>
-
-    <?php
-    $organizations = $sso_user['organizations'] ?? [];
-    if (empty($organizations)):
-    ?>
-        <p style="color: #78909c;">ไม่พบข้อมูลสังกัด</p>
-    <?php else: ?>
-        <?php foreach ($organizations as $i => $org): ?>
-            <div style="background: #f5f5f5; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
-                <h3 style="color: #1565c0; font-size: 1rem; margin-bottom: 0.5rem;">สังกัดที่ <?= $i + 1 ?></h3>
-                <table style="margin: 0;">
-                    <tr>
-                        <th>หน่วยงาน (ไทย)</th>
-                        <td><?= htmlspecialchars($org['hname_th'] ?? '-') ?></td>
-                    </tr>
-                    <tr>
-                        <th>Organization (Eng)</th>
-                        <td><?= htmlspecialchars($org['hname_eng'] ?? '-') ?></td>
-                    </tr>
-                    <tr>
-                        <th>รหัสหน่วยงาน</th>
-                        <td><?= htmlspecialchars($org['hcode'] ?? '-') ?></td>
-                    </tr>
-                    <tr>
-                        <th>ตำแหน่ง</th>
-                        <td><?= htmlspecialchars($org['position'] ?? '-') ?></td>
-                    </tr>
-                    <tr>
-                        <th>ID ตำแหน่ง</th>
-                        <td><?= htmlspecialchars($org['position_id'] ?? '-') ?></td>
-                    </tr>
-                    <tr>
-                        <th>Business ID</th>
-                        <td><code><?= htmlspecialchars(substr($org['business_id'] ?? '-', 0, 20)) ?>...</code></td>
-                    </tr>
-                </table>
-            </div>
-        <?php endforeach; ?>
-    <?php endif; ?>
 
     <p class="expires">
         session หมดอายุเวลา:

@@ -1,9 +1,9 @@
-# SSO — ระบบ Single Sign-On ด้วย Provider ID (โรงพยาบาลอ่างทอง)
+# SSO — ระบบ Single Sign-On ด้วย Health ID (โรงพยาบาลอ่างทอง)
 
 ## Overview
 
 ระบบนี้ทำหน้าที่เป็น **SSO Gateway** สำหรับแอปพลิเคชันภายใน (`/athweb/*`)
-ใช้ **Provider ID** (provider.id.th) ของกระทรวงสาธารณสุขเป็น OAuth2 Identity Provider
+ใช้ **Health ID** (หมอพร้อมดิจิทัลไอดี — moph.id.th) ของกระทรวงสาธารณสุขเป็น OAuth2 Identity Provider
 เมื่อผู้ใช้ยืนยันตัวตนสำเร็จแล้ว ข้อมูลจะถูกเก็บใน **PHP Session** และแชร์ร่วมกันระหว่างแอปในโดเมนเดียวกัน
 
 > **หมายเหตุ — Base Path ตามสภาพแวดล้อม:**
@@ -22,9 +22,9 @@
 
 | Path | หน้าที่ |
 |---|---|
-| `GET /athweb/sso/?page=login` | เริ่มต้น login — redirect ไปยัง Provider ID OAuth |
+| `GET /athweb/sso/?page=login` | เริ่มต้น login — redirect ไปยัง Health ID OAuth |
 | `GET /athweb/sso/?page=login&continue={url}` | Login พร้อมระบุ URL ต้นทาง (ref path) |
-| `GET /athweb/sso/?page=callback` | รับ OAuth code จาก Provider ID (callback URL) |
+| `GET /athweb/sso/?page=callback` | รับ OAuth code จาก Health ID (callback URL) |
 | `GET /athweb/sso/?page=profile` | หน้าแสดงข้อมูลผู้ใช้ (protected) |
 | `GET /athweb/sso/?page=logout` | ออกจากระบบ — ลบ session ทั้งหมด |
 
@@ -45,14 +45,14 @@
   redirect → /athweb/sso/?page=login&continue=http://localhost/athweb/some-app/page
            │
            ▼  (auto-redirect ทันที ไม่มี UI)
-  Provider ID OAuth2 Authorization URL
+  Health ID OAuth2 Authorization URL
            │
-           ▼  (ผู้ใช้ login ที่ Provider ID)
+           ▼  (ผู้ใช้ login ที่ Health ID)
   redirect → /athweb/sso/?page=callback?code=...&state=...
            │
            ├─ Validate CSRF state
            ├─ Exchange code → access_token
-           ├─ Fetch user profile จาก Provider ID API
+           ├─ Fetch user profile จาก Health ID API
            ├─ สร้าง PHP Session
            ├─ บันทึก access log
            │
@@ -73,34 +73,28 @@ $_SESSION['sso_expires_at'] = time() + (60 * 60 * 8); // 8 ชั่วโมง
 
 $_SESSION['sso_user'] = [
     // Primary identifiers
-    'provider_id'   => '...',   // Provider ID unique ID
-    'account_id'    => '...',
-    'hash_cid'      => '...',   // Hashed citizen ID
+    'account_id'     => '...',   // Health ID unique account ID
+    'hash_cid'       => '...',   // hash_id_card_num (SHA256)
 
     // Security level
-    'ial_level'     => 2,       // Identity Assurance Level
+    'ial_level'      => 1.3,     // Identity Assurance Level
 
     // Personal info
-    'name_th'       => 'ชื่อ นามสกุล',
-    'name_eng'      => 'Name Surname',
-    'email'         => '...',
-
-    // Organizations (อาจมีมากกว่า 1 หน่วยงาน)
-    'organizations' => [
-        [
-            'hcode'       => '10669',
-            'hname_th'    => 'โรงพยาบาลอ่างทอง',
-            'hname_eng'   => 'Angthong Hospital',
-            'position'    => 'แพทย์',
-            'position_id' => '...',
-            'business_id' => '...',
-        ],
-        // ...
-    ],
+    'name_th'        => 'คำนำหน้าชื่อ นามสกุล',
+    'name_eng'       => 'Title Firstname Lastname',
+    'title_th'       => 'นาย',
+    'title_eng'      => 'Mr.',
+    'first_name_th'  => 'ชื่อ',
+    'last_name_th'   => 'นามสกุล',
+    'first_name_eng' => 'Firstname',
+    'last_name_eng'  => 'Lastname',
+    'mobile_number'  => '08xxxxxxxx',
+    'gender_th'      => 'ชาย',
+    'birth_date'     => '01/01/1990',
 
     // Metadata
-    'login_at'      => '2026-03-24 08:00:00',
-    'login_ip'      => '192.168.1.1',
+    'login_at'       => '2026-03-24 08:00:00',
+    'login_ip'       => '192.168.1.1',
 ];
 ```
 
@@ -116,7 +110,7 @@ require_once '/var/www/html/athweb/sso/pages/session-check.php';
 // หลังจากนี้ $sso_user พร้อมใช้งานทันที
 
 echo 'สวัสดี, ' . $sso_user['name_th'];
-echo 'หน่วยงาน: ' . ($sso_user['organizations'][0]['hname_th'] ?? '-');
+echo 'เบอร์โทร: ' . ($sso_user['mobile_number'] ?? '-');
 ```
 
 **`session-check.php` ทำสิ่งต่อไปนี้โดยอัตโนมัติ:**
@@ -149,7 +143,7 @@ echo 'หน่วยงาน: ' . ($sso_user['organizations'][0]['hname_th'] ?
 ├── conf/
 │   └── sso-config.php     # OAuth2 credentials, session config (UAT/PRD)
 ├── pages/
-│   ├── login.php          # สร้าง CSRF state + auto-redirect ไป Provider ID
+│   ├── login.php          # สร้าง CSRF state + auto-redirect ไป Health ID
 │   ├── callback.php       # รับ OAuth code, แลก token, สร้าง session, redirect กลับ
 │   ├── logout.php         # Destroy session + redirect ไป login
 │   ├── profile.php        # หน้าแสดง sso_user (protected)
@@ -164,18 +158,18 @@ echo 'หน่วยงาน: ' . ($sso_user['organizations'][0]['hname_th'] ?
 
 ควบคุมผ่าน environment variable `PROVIDER_ENV`:
 
-| ค่า | Provider ID Endpoint |
+| ค่า | Health ID Endpoint |
 |---|---|
-| `uat` (default) | `https://uat-provider.id.th` |
-| `prd` | `https://provider.id.th` |
+| `uat` (default) | `https://uat-moph.id.th` |
+| `prd` | `https://moph.id.th` |
 
 สามารถ override credentials ผ่าน env vars:
 
 ```env
 PROVIDER_ENV=prd
-PROVIDER_PRD_CLIENT_ID=...
-PROVIDER_PRD_CLIENT_SECRET=...
-PROVIDER_PRD_REDIRECT_URI=https://ath7.link/sso/callback
+HEALTHID_PRD_CLIENT_ID=...
+HEALTHID_PRD_CLIENT_SECRET=...
+HEALTHID_PRD_REDIRECT_URI=https://ath7.link/sso/callback
 ```
 
 ---
@@ -189,8 +183,8 @@ PROVIDER_PRD_REDIRECT_URI=https://ath7.link/sso/callback
 | `csrf` | CSRF state ไม่ตรงหรือหมดอายุ |
 | `state` | ไม่มี `code` หรือ `state` ใน request |
 | `token` | Token exchange ล้มเหลว |
-| `profile` | ดึงข้อมูลผู้ใช้จาก Provider ID ไม่สำเร็จ |
-| `no_cid` | ไม่พบ `provider_id` ในข้อมูลผู้ใช้ |
+| `profile` | ดึงข้อมูลผู้ใช้จาก Health ID ไม่สำเร็จ |
+| `no_cid` | ไม่พบ `account_id` ในข้อมูลผู้ใช้ |
 
 > **หมายเหตุ:** หน้า login ปัจจุบัน auto-redirect ทันที ไม่แสดง UI จึงไม่แสดง error message แก่ผู้ใช้
 
@@ -207,7 +201,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/athweb/sso/pages/session-check.php';
 // ถ้า login แล้ว → $sso_user พร้อมใช้
 
 $name    = $sso_user['name_th'];
-$hcode   = $sso_user['organizations'][0]['hcode'] ?? '';
+$mobile  = $sso_user['mobile_number'] ?? '';
 $expires = date('H:i', $_SESSION['sso_expires_at']);
 ?>
 <p>ยินดีต้อนรับ <?= htmlspecialchars($name) ?> (หมดอายุ <?= $expires ?> น.)</p>

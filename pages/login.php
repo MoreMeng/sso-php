@@ -1,7 +1,7 @@
 <?php
 /**
- * login.php — หน้าเข้าสู่ระบบด้วย Provider ID
- * Login page — redirects user to Provider ID OAuth2 authorization endpoint
+ * login.php — หน้าเข้าสู่ระบบด้วย Health ID (หมอพร้อมดิจิทัลไอดี)
+ * Login page — redirects user to Health ID OAuth2 authorization endpoint
  */
 
 require_once __DIR__ . '/../conf/sso-config.php';
@@ -34,24 +34,16 @@ $state = bin2hex(random_bytes(32));
 $_SESSION['oauth_state']      = $state;
 $_SESSION['oauth_state_time'] = time();
 
-// สร้าง Authorization URL — Build authorization URL
-// Build authorization URL. We encode parameters except `scope` so the
-// `scope` value is included verbatim (spaces not percent-encoded).
-$scope = 'cid title_th title_eng name_th name_eng mobile_number email organization ial idp_permission offline_access';
-$params = [
+// สร้าง Authorization URL สำหรับ Health ID
+// Health ID format: {URL}/oauth/redirect?client_id=...&redirect_uri=...&response_type=code&state=...
+$auth_url = PROVIDER_ID_AUTHORIZATION_URL . '?' . http_build_query([
     'client_id'     => PROVIDER_ID_CLIENT_ID,
+    'redirect_uri'  => OAUTH_REDIRECT_URI,
     'response_type' => 'code',
-];
-$query = http_build_query($params, '', '&', PHP_QUERY_RFC3986);
-// Build URL in this exact order: client_id, response_type, redirect_uri (verbatim),
-// scope (spaces encoded as %20), state.
-$auth_url = PROVIDER_ID_AUTHORIZATION_URL
-    . '?' . $query
-    . '&redirect_uri=' . OAUTH_REDIRECT_URI
-    . '&scope=' . rawurlencode($scope)
-    . '&state=' . $state;
+    'state'         => $state,
+]);
 
-// Auto-redirect to Provider ID OAuth authorization endpoint
+// Auto-redirect to Health ID OAuth authorization endpoint
 header('Location: ' . $auth_url);
 exit;
 ?>
