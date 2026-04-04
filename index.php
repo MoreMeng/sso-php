@@ -7,23 +7,23 @@
  */
 
 // Set session cookie lifetime to 8 hours (28800 seconds)
-session_set_cookie_params([
-    'lifetime' => 28800,  // 8 hours
+session_set_cookie_params( [
+    'lifetime' => 28800, // 8 hours
     'path'     => '/',
-    'secure'   => isset($_SERVER['HTTPS']),
+    'secure'   => isset( $_SERVER['HTTPS'] ),
     'httponly' => true,
-    'samesite' => 'Lax',
-]);
+    'samesite' => 'Lax'
+] );
 
 session_start();
 
 // Get page parameter (sanitized)
 $GET_PAGE = $_GET['page'] ?? '';
-$GET_PAGE = preg_replace('/[^a-z0-9\-_]/', '', strtolower($GET_PAGE));
-$GET_PAGE = substr($GET_PAGE, 0, 50);
+$GET_PAGE = preg_replace( '/[^a-z0-9\-_]/', '', strtolower( $GET_PAGE ) );
+$GET_PAGE = substr( $GET_PAGE, 0, 50 );
 
 // -------- Page Routing -------- //
-switch ($GET_PAGE) {
+switch ( $GET_PAGE ) {
 
     case '':
     case 'login':
@@ -50,4 +50,3 @@ switch ($GET_PAGE) {
         require 'pages/login.php';
         break;
 }
-?>

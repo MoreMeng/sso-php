@@ -1,11 +1,11 @@
 <?php
-/**
+    /**
  * profile.php — หน้าแสดงข้อมูลผู้ใช้ (สำหรับทดสอบ)
  * Profile page — displays logged-in user information for testing purposes
  */
 
-require_once __DIR__ . '/session-check.php';
-// $sso_user is now available (set by session-check.php)
+    require_once __DIR__ . '/session-check.php';
+    // $sso_user is now available (set by session-check.php)
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -112,77 +112,77 @@ require_once __DIR__ . '/session-check.php';
     <table>
         <tr>
             <th>Provider ID</th>
-            <td><?= htmlspecialchars($sso_user['provider_id'] ?? '-') ?></td>
+            <td><?php echo htmlspecialchars( $sso_user['provider_id'] ?? '-' ) ;?></td>
         </tr>
         <tr>
             <th>Account ID</th>
-            <td><code><?= htmlspecialchars(substr($sso_user['account_id'] ?? '-', 0, 20)) ?>...</code></td>
+            <td><code><?php echo htmlspecialchars( substr( $sso_user['account_id'] ?? '-', 0, 20 ) ) ;?>...</code></td>
         </tr>
         <tr>
             <th>ชื่อ (ไทย)</th>
-            <td><?= htmlspecialchars($sso_user['name_th'] ?? '-') ?></td>
+            <td><?php echo htmlspecialchars( $sso_user['name_th'] ?? '-' ) ;?></td>
         </tr>
         <tr>
             <th>Name (English)</th>
-            <td><?= htmlspecialchars($sso_user['name_eng'] ?? '-') ?></td>
+            <td><?php echo htmlspecialchars( $sso_user['name_eng'] ?? '-' ) ;?></td>
         </tr>
         <tr>
             <th>อีเมล</th>
-            <td><?= htmlspecialchars($sso_user['email'] ?? '-') ?></td>
+            <td><?php echo htmlspecialchars( $sso_user['email'] ?? '-' ) ;?></td>
         </tr>
         <tr>
             <th>ระดับความน่าเชื่อถือ</th>
-            <td><?= htmlspecialchars($sso_user['ial_level'] ?? '-') ?></td>
+            <td><?php echo htmlspecialchars( $sso_user['ial_level'] ?? '-' ) ;?></td>
         </tr>
         <tr>
             <th>Hash CID</th>
-            <td><code><?= htmlspecialchars(substr($sso_user['hash_cid'] ?? '-', 0, 32)) ?>...</code></td>
+            <td><code><?php echo htmlspecialchars( substr( $sso_user['hash_cid'] ?? '-', 0, 32 ) ) ;?>...</code></td>
         </tr>
         <tr>
             <th>เข้าสู่ระบบเมื่อ</th>
-            <td><?= htmlspecialchars($sso_user['login_at'] ?? '-') ?></td>
+            <td><?php echo htmlspecialchars( $sso_user['login_at'] ?? '-' ) ;?></td>
         </tr>
         <tr>
             <th>IP Address</th>
-            <td><?= htmlspecialchars($sso_user['login_ip'] ?? '-') ?></td>
+            <td><?php echo htmlspecialchars( $sso_user['login_ip'] ?? '-' ) ;?></td>
         </tr>
     </table>
 
     <h2 style="font-size: 1.1rem; color: #1a237e; margin-top: 2rem; margin-bottom: 1rem;">📋 สังกัดหน่วยงาน</h2>
 
     <?php
-    $organizations = $sso_user['organizations'] ?? [];
-    if (empty($organizations)):
+        $organizations = $sso_user['organizations'] ?? [];
+        if ( empty( $organizations ) ):
     ?>
         <p style="color: #78909c;">ไม่พบข้อมูลสังกัด</p>
     <?php else: ?>
-        <?php foreach ($organizations as $i => $org): ?>
+        <?php foreach ( $organizations as $i => $org ): ?>
             <div style="background: #f5f5f5; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
-                <h3 style="color: #1565c0; font-size: 1rem; margin-bottom: 0.5rem;">สังกัดที่ <?= $i + 1 ?></h3>
+                <h3 style="color: #1565c0; font-size: 1rem; margin-bottom: 0.5rem;">สังกัดที่ <?php echo $i + 1 ;?></h3>
                 <table style="margin: 0;">
                     <tr>
                         <th>หน่วยงาน (ไทย)</th>
-                        <td><?= htmlspecialchars($org['hname_th'] ?? '-') ?></td>
+                        <td><?php echo htmlspecialchars( $org['hname_th'] ?? '-' ) ;?></td>
                     </tr>
                     <tr>
                         <th>Organization (Eng)</th>
-                        <td><?= htmlspecialchars($org['hname_eng'] ?? '-') ?></td>
+                        <td><?php echo htmlspecialchars( $org['hname_eng'] ?? '-' ) ;?></td>
                     </tr>
                     <tr>
                         <th>รหัสหน่วยงาน</th>
-                        <td><?= htmlspecialchars($org['hcode'] ?? '-') ?></td>
+                        <td><?php echo htmlspecialchars( $org['hcode'] ?? '-' ) ;?></td>
                     </tr>
                     <tr>
                         <th>ตำแหน่ง</th>
-                        <td><?= htmlspecialchars($org['position'] ?? '-') ?></td>
+                        <td><?php echo htmlspecialchars( $org['position'] ?? '-' ) ;?></td>
                     </tr>
                     <tr>
                         <th>ID ตำแหน่ง</th>
-                        <td><?= htmlspecialchars($org['position_id'] ?? '-') ?></td>
+                        <td><?php echo htmlspecialchars( $org['position_id'] ?? '-' ) ;?></td>
                     </tr>
                     <tr>
                         <th>Business ID</th>
-                        <td><code><?= htmlspecialchars(substr($org['business_id'] ?? '-', 0, 20)) ?>...</code></td>
+                        <td><code><?php echo htmlspecialchars( substr( $org['business_id'] ?? '-', 0, 20 ) ) ;?>...</code></td>
                     </tr>
                 </table>
             </div>
@@ -191,7 +191,7 @@ require_once __DIR__ . '/session-check.php';
 
     <p class="expires">
         session หมดอายุเวลา:
-        <?= isset($_SESSION['sso_expires_at']) ? date('Y-m-d H:i:s', $_SESSION['sso_expires_at']) : '-' ?>
+        <?php echo isset( $_SESSION['sso_expires_at'] ) ? date( 'Y-m-d H:i:s', $_SESSION['sso_expires_at'] ) : '-' ;?>
     </p>
 
     <a href="?page=logout" class="btn-logout">ออกจากระบบ</a>

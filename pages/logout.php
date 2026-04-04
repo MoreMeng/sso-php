@@ -5,19 +5,19 @@
 
 require_once __DIR__ . '/../conf/sso-config.php';
 
-session_set_cookie_params([
+session_set_cookie_params( [
     'lifetime' => 0,
     'path'     => '/',
-    'secure'   => isset($_SERVER['HTTPS']),
+    'secure'   => isset( $_SERVER['HTTPS'] ),
     'httponly' => true,
-    'samesite' => 'Lax',
-]);
+    'samesite' => 'Lax'
+] );
 session_start();
 session_unset();
 session_destroy();
 
 // ลบ session cookie ออกจาก browser
-if (ini_get('session.use_cookies')) {
+if ( ini_get( 'session.use_cookies' ) ) {
     $params = session_get_cookie_params();
     setcookie(
         session_name(),
@@ -30,5 +30,5 @@ if (ini_get('session.use_cookies')) {
     );
 }
 
-header('Location: ' . BASE_PATH . '/?page=login');
+header( 'Location: ' . BASE_PATH . '/?page=login' );
 exit;
