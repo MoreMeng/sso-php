@@ -1,8 +1,73 @@
-# SSO — ระบบ Single Sign-On ด้วย Provider ID (โรงพยาบาลอ่างทอง)
+# SSO — Provider ID Gateway (โรงพยาบาลอ่างทอง)
 
-## Overview
+> Full documentation: [README.md](../README.md) · OAuth API docs: [docs/](../docs/)
 
-ระบบนี้ทำหน้าที่เป็น **SSO Gateway** สำหรับแอปพลิเคชันภายใน (`/athweb/*`)
+PHP OAuth2 SSO gateway for internal apps (`/athweb/*`). Identity provider: **provider.id.th** (กระทรวงสาธารณสุข). Session shared across same domain.
+
+## Architecture
+
+```
+index.php  →  pages/{login,callback,logout,profile}.php
+conf/sso-config.php   # OAuth2 credentials + constants
+pages/session-check.php  # Auth guard — require in every protected page
+logs/access.log          # Append-only login log (auto-created)
+```
+
+**Routing:** `?page={login|callback|logout|profile}` — sanitized in `index.php` (lowercase, alphanumeric only, max 50 chars). Unknown pages fall through to `login.php`.
+
+**Session starts** at the top of `index.php` (before routing), with `httponly`, `samesite=Lax`, `secure` (when HTTPS), `lifetime=28800`.
+
+## Environments & Base Path
+
+| `PROVIDER_ENV` | Base path | Endpoint |
+|---|---|---|
+| `uat` (default) | `/athweb/sso` | `https://uat-provider.id.th` |
+| `prd` | `/sso` | `https://provider.id.th` |
+
+`BASE_PATH` constant is auto-set in `sso-config.php`. All internal redirects and `session-check.php` use it. **Do not hardcode `/athweb/sso` strings** — always use `BASE_PATH`.
+
+Override credentials: `PROVIDER_UAT_CLIENT_ID`, `PROVIDER_PRD_CLIENT_ID`, etc. via env vars.
+
+## Key Implementation Details
+
+**CSRF State** — generated in `login.php` as 32-byte hex, stored in `$_SESSION['oauth_state']` + `$_SESSION['oauth_state_time']`. Validated in `callback.php` with `hash_equals()`, unset immediately (single-use, 10-minute TTL).
+
+**Token Exchange** — HTTP Basic Auth (`Authorization: Basic base64(id:secret)`). Response may be wrapped: check for `$data['data']` key before unwrapping.
+
+**User Profile Fetch** — requires three headers: `Authorization: Bearer {token}`, `client-id: ...`, `secret-key: ...`.
+
+**safeRedirect()** in `callback.php` — allows only relative paths or same-host URLs. Silently falls back to `BASE_PATH . '/?page=profile'` for untrusted hosts (no error logged).
+
+**Continue URL** — stored in `$_SESSION['sso_continue_url']` (not in query string across hops). Special value `'profile'` → redirects to profile page. Unset after use.
+
+**Session fixation** — `session_regenerate_id(true)` is called in `callback.php` after successful login only.
+
+## Auth Guard Usage
+
+```php
+<?php
+require_once $_SERVER['DOCUMENT_ROOT'] . '/athweb/sso/pages/session-check.php';
+// $sso_user is now available — redirect already happened if not logged in
+
+echo htmlspecialchars($sso_user['name_th']);
+$hcode = $sso_user['organizations'][0]['hcode'] ?? '';  // may be empty array!
+```
+
+`session-check.php` steps: start session → legacy fallback → auth check → expiry check → expose `$sso_user`.
+
+**Legacy fallback:** if `$_SESSION['provider']` exists (from older `/member` system), converts to SSO session without re-verifying OAuth. This is intentional trust delegation.
+
+## Gotchas
+
+- **`organizations` may be `[]`** — always use `??` when accessing `$sso_user['organizations'][0]`.
+- **HTTPS detection** uses `isset($_SERVER['HTTPS'])` — fails behind reverse proxy without `X-Forwarded-Proto`. Relevant for `secure` cookie flag.
+- **Logout is local only** — OAuth access token at Provider ID side remains valid. Only local session is destroyed.
+- **Login page has no UI** — `login.php` auto-redirects immediately; error codes in `?error=` param are never shown to users (they just see a redirect loop or re-login).
+- **Access log** uses `FILE_APPEND | LOCK_EX`. Format: `YYYY-MM-DD HH:MM:SS | hash_cid | name_th | ip`.
+
+## Security Non-Negotiables
+
+Every user-facing redirect must go through `safeRedirect()`. Never use `header('Location: ' . $_GET[...])` directly. Output user data with `htmlspecialchars()`. The CSRF `state` must be validated with `hash_equals()` before any token exchange.
 ใช้ **Provider ID** (provider.id.th) ของกระทรวงสาธารณสุขเป็น OAuth2 Identity Provider
 เมื่อผู้ใช้ยืนยันตัวตนสำเร็จแล้ว ข้อมูลจะถูกเก็บใน **PHP Session** และแชร์ร่วมกันระหว่างแอปในโดเมนเดียวกัน
 
