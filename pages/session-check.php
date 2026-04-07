@@ -26,6 +26,31 @@ if ( session_status() === PHP_SESSION_NONE ) {
     session_start();
 }
 
+// ──────────────────────────────────────────────────────────────
+// Fallback: ถ้า login ผ่าน /member แล้ว ให้สร้าง sso session จาก $_SESSION['provider']
+// ทั้งสองระบบแชร์ PHP session เดียวกัน (same domain, path='/')
+// ──────────────────────────────────────────────────────────────
+if ( ( !isset( $_SESSION['sso_logged_in'] ) || $_SESSION['sso_logged_in'] !== true )
+    && !empty( $_SESSION['ses_id'] )
+    && !empty( $_SESSION['provider']['id'] )
+) {
+    $p = $_SESSION['provider'];
+    $_SESSION['sso_logged_in']  = true;
+    $_SESSION['sso_expires_at'] = time() + SSO_SESSION_LIFETIME;
+    $_SESSION['sso_user']       = [
+        'provider_id'   => $p['id']            ?? '',
+        'account_id'    => '',
+        'hash_cid'      => $p['cid']           ?? '',
+        'ial_level'     => 0,
+        'name_th'       => $p['name']          ?? '',
+        'name_eng'      => '',
+        'email'         => '',
+        'organizations' => $p['organizations'] ?? [],
+        'login_at'      => date( 'Y-m-d H:i:s' ),
+        'login_ip'      => $_SERVER['REMOTE_ADDR'] ?? '',
+    ];
+}
+
 // ตรวจสอบว่า login หรือยัง — Check if user is logged in
 if ( !isset( $_SESSION['sso_logged_in'] ) || $_SESSION['sso_logged_in'] !== true ) {
     $current_url = ( isset( $_SERVER['HTTPS'] ) ? 'https' : 'http' )
